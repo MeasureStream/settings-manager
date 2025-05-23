@@ -7,7 +7,7 @@ import jakarta.persistence.ManyToOne
 @Entity
 class MuSetting {
     @Id
-    var id : Long = 0
+    var networkId : Long = 0
 
     var samplingFrequency : Long = 0
 

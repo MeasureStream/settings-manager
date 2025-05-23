@@ -1,8 +1,10 @@
 package measuremanager.settingsmanager.services
 
 import jakarta.persistence.EntityNotFoundException
+import measuremanager.settingsmanager.dtos.MuCreateDTO
 import measuremanager.settingsmanager.dtos.MuSettingDTO
 import measuremanager.settingsmanager.dtos.toDTO
+import measuremanager.settingsmanager.entities.CuSetting
 import measuremanager.settingsmanager.entities.MuSetting
 import measuremanager.settingsmanager.entities.User
 import measuremanager.settingsmanager.repositories.MuSettingRepository
@@ -25,6 +27,19 @@ class MuSettingServiceImpl(private val mr:MuSettingRepository, private val ur:Us
         return mr.save(me).toDTO()
     }
 
+    override fun create(m: MuCreateDTO): MuSettingDTO {
+        val user  = getOrCreateUserId( m.userid)
+
+        val me = MuSetting().apply {
+            networkId = m.networkId
+        }
+
+        user.muSettings.add(me)
+        ur.save(user)
+
+        return mr.save(me).toDTO()
+    }
+
     override fun read(id: Long): MuSettingDTO {
         val me = mr.findById(id).getOrElse { throw EntityNotFoundException() }
         if(me.user.userId != getCurrentUserId()) throw  Exception("You can't get an Entity owned by someone else")
@@ -38,7 +53,7 @@ class MuSettingServiceImpl(private val mr:MuSettingRepository, private val ur:Us
 
     override fun update(m: MuSettingDTO): MuSettingDTO {
         val userid = getCurrentUserId()
-        val me = mr.findById(m.id).getOrElse { throw EntityNotFoundException() }
+        val me = mr.findById(m.networkId).getOrElse { throw EntityNotFoundException() }
         if(me.user.userId != userid) throw  Exception("You can't update an Entity owned by someone else")
         me.apply {
             samplingFrequency = m.samplingFrequency
@@ -82,6 +97,24 @@ class MuSettingServiceImpl(private val mr:MuSettingRepository, private val ur:Us
             name = info["givenName"] ?: ""
             surname = info["familyName"] ?: ""
             email = info["email"] ?: ""
+            cuSettings = mutableSetOf()
+            muSettings = mutableSetOf()
+        }
+
+        return ur.save(newUser)
+    }
+
+    fun getOrCreateUserId( userId : String): User {
+        //val userId = getCurrentUserId()
+        val user = ur.findById(userId).getOrNull()
+        if( user != null)
+            return user
+
+        val newUser = User().apply {
+            this.userId = userId
+            name =  ""
+            surname =  ""
+            email =  ""
             cuSettings = mutableSetOf()
             muSettings = mutableSetOf()
         }

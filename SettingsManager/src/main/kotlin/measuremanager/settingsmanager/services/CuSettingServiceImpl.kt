@@ -1,6 +1,7 @@
 package measuremanager.settingsmanager.services
 
 import jakarta.persistence.EntityNotFoundException
+import measuremanager.settingsmanager.dtos.CuCreateDTO
 import measuremanager.settingsmanager.dtos.CuSettingDTO
 import measuremanager.settingsmanager.dtos.toDTO
 import measuremanager.settingsmanager.entities.CuSetting
@@ -18,10 +19,24 @@ class CuSettingServiceImpl(private val cr: CuSettingRepository, private val ur :
     override fun create(c: CuSettingDTO): CuSettingDTO {
         val user  = getOrCreateCurrentUserId()
         val ce = CuSetting().apply {
+            networkId = c.networkId
             bandwith = c.bandwith
             codingRate = c.codingRate
             spreadingFactor = c.spreadingFactor
             updateInterval = c.updateInterval
+        }
+
+        user.cuSettings.add(ce)
+        ur.save(user)
+
+        return cr.save(ce).toDTO()
+    }
+
+    override fun create(c : CuCreateDTO) : CuSettingDTO {
+        val user  = getOrCreateUserId( c.userId)
+
+        val ce = CuSetting().apply {
+            networkId = c.networkId
         }
 
         user.cuSettings.add(ce)
@@ -45,7 +60,7 @@ class CuSettingServiceImpl(private val cr: CuSettingRepository, private val ur :
 
     override fun update(c: CuSettingDTO): CuSettingDTO {
         val userid = getCurrentUserId()
-        val ce = cr.findById(c.id).getOrElse { throw EntityNotFoundException() }
+        val ce = cr.findById(c.networkId).getOrElse { throw EntityNotFoundException() }
         if (ce.user.userId != userid) throw  Exception("You can't update an Entity owned by someone else")
 
         ce.apply {
@@ -96,6 +111,24 @@ class CuSettingServiceImpl(private val cr: CuSettingRepository, private val ur :
             name = info["givenName"] ?: ""
             surname = info["familyName"] ?: ""
             email = info["email"] ?: ""
+            cuSettings = mutableSetOf()
+            muSettings = mutableSetOf()
+        }
+
+        return ur.save(newUser)
+    }
+
+    fun getOrCreateUserId( userId : String): User {
+        //val userId = getCurrentUserId()
+        val user = ur.findById(userId).getOrNull()
+        if( user != null)
+            return user
+
+        val newUser = User().apply {
+            this.userId = userId
+            name =  ""
+            surname =  ""
+            email =  ""
             cuSettings = mutableSetOf()
             muSettings = mutableSetOf()
         }

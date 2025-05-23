@@ -7,7 +7,7 @@ import jakarta.persistence.ManyToOne
 @Entity
 class CuSetting {
     @Id
-    var id : Long = 0
+    var networkId : Long = 0
 
     var bandwith:Long = 0
     var codingRate : Long = 0
