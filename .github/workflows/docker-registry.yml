@@ -28,7 +28,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Spring Boot app
-        run: ./settings-manager/gradlew bootJar
+        run: ./SettingsManager/gradlew bootJar
 
       - name: Build and push Docker image (multi-arch)
         uses: docker/build-push-action@v5
